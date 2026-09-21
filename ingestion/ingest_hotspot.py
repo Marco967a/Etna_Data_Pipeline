@@ -7,8 +7,8 @@ ufficiale (https://firms.modaps.eosdis.nasa.gov/api/area/) ed esempi pubblici.
 URL: https://firms.modaps.eosdis.nasa.gov/api/area/csv/{MAP_KEY}/{SOURCE}/{AREA}/{DAY_RANGE}/{DATE}
 - SOURCE: usiamo le versioni "_SP" (Standard Processing, dati storici validati)
   invece di "_NRT" (Near Real Time, solo ultimi ~2 mesi).
-- DAY_RANGE: 10 è il valore storicamente documentato come massimo per richiesta;
-  se in futuro FIRMS alza il limite, puoi aumentarlo qui.
+- DAY_RANGE: 5 è il massimo accettato oggi da FIRMS (con 10 risponde 400
+  "Invalid day range. Expects [1..5]"); se in futuro alza il limite, aumentalo qui.
 - DATE: data di partenza del range di DAY_RANGE giorni.
 
 NOTA IMPORTANTE PRIMA DEL BACKFILL COMPLETO:
@@ -33,7 +33,7 @@ from config import FIRMS_AREA_STRING, FIRMS_MAP_KEY
 from db.connection import get_connection
 
 BASE_URL = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
-DAY_RANGE = 10
+DAY_RANGE = 5
 
 # instrument -> (source_id_FIRMS, data disponibile da)
 SOURCES = {

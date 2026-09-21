@@ -30,6 +30,18 @@ def test_parse_text_converte_tipi_e_campi_vuoti():
     assert set(rows[0]) == set(COLUMNS)
 
 
+def test_parse_text_orario_senza_fuso_e_utc():
+    text = "5|2024-01-03T06:00:20.910000|37.6|14.9|7|A|B|C|5|ML|1.6|D|Etna|earthquake"
+
+    assert parse_text(text)[0]["event_time"] == "2024-01-03T06:00:20.910000+00:00"
+
+
+def test_parse_text_orario_con_fuso_resta_invariato():
+    text = "6|2024-01-03T06:00:20Z|37.6|14.9|7|A|B|C|6|ML|1.6|D|Etna|earthquake"
+
+    assert parse_text(text)[0]["event_time"] == "2024-01-03T06:00:20Z"
+
+
 def test_parse_text_salta_righe_malformate(capsys):
     text = "\n".join([
         ISIDE_HEADER,

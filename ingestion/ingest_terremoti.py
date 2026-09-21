@@ -12,6 +12,7 @@ Esecuzione:
     python -m ingestion.ingest_terremoti --from-year 2018 --to-year 2024
 """
 import argparse
+import re
 import time
 from datetime import date
 
@@ -41,6 +42,7 @@ UPSERT_SQL = """
         'ISIDe_FDSN'
     )
     ON CONFLICT (event_id) DO UPDATE SET
+        event_time = EXCLUDED.event_time,
         magnitude = EXCLUDED.magnitude,
         depth_km = EXCLUDED.depth_km,
         event_location_name = EXCLUDED.event_location_name;
@@ -56,6 +58,17 @@ def _clean(column: str, value: str):
     if not value:
         return None
     return float(value) if column in NUMERIC_COLUMNS else value
+
+
+def _as_utc(event_time: str) -> str:
+    """
+    Gli orari FDSN sono UTC ma il formato "text" non riporta il fuso: senza un offset
+    esplicito PostgreSQL li interpreterebbe nel fuso della sessione (es. Europe/Berlin)
+    sballando l'istante di 1-2 ore.
+    """
+    if re.search(r"(Z|[+-]\d{2}:?\d{2})$", event_time):
+        return event_time
+    return event_time + "+00:00"
 
 
 def parse_text(text: str) -> list[dict]:
@@ -74,6 +87,7 @@ def parse_text(text: str) -> list[dict]:
         except ValueError:
             print(f"  [WARN] valore numerico non valido, riga saltata: {line[:80]}")
             continue
+        row["event_time"] = _as_utc(row["event_time"])
         rows.append(row)
     return rows
 

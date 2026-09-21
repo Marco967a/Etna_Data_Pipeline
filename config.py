@@ -20,6 +20,14 @@ DB_CONFIG = {
 # --- NASA FIRMS ---
 FIRMS_MAP_KEY = os.getenv("FIRMS_MAP_KEY", "")
 
+# --- NASA Earthdata Login ---
+# earthaccess legge da solo queste variabili (login "environment"); qui servono
+# solo per dare un errore chiaro se mancano. In alternativa al username/password
+# si può usare un token (EARTHDATA_TOKEN).
+EARTHDATA_USERNAME = os.getenv("EARTHDATA_USERNAME", "")
+EARTHDATA_PASSWORD = os.getenv("EARTHDATA_PASSWORD", "")
+EARTHDATA_TOKEN = os.getenv("EARTHDATA_TOKEN", "")
+
 # --- Area geografica di interesse (bounding box Etna) ---
 # Copre l'edificio vulcanico e l'area di sismicità vulcano-tettonica associata.
 # Puoi restringerlo in seguito se noti troppo "rumore" da eventi tettonici regionali

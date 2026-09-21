@@ -7,6 +7,9 @@ eventi noti). Struttura ispirata a NewBoxofficeProject.
 ## Setup
 
 ```bash
+git clone https://github.com/Marco967a/Etna_Data_Pipeline.git
+cd Etna_Data_Pipeline
+
 python -m venv venv
 source venv/bin/activate        # su Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -17,6 +20,26 @@ psql -U <user> -d etna_data -f db/schema.sql
 
 FIRMS_MAP_KEY gratuita: https://firms.modaps.eosdis.nasa.gov/api/map_key/
 
+### NASA Earthdata
+
+L'account Earthdata (https://urs.earthdata.nasa.gov/) è **distinto** dalla
+`FIRMS_MAP_KEY`: FIRMS usa solo la chiave, mentre il login Earthdata serve per
+scaricare gli altri dataset NASA (es. temperatura superficiale MODIS, SO₂).
+Compila `EARTHDATA_USERNAME` e `EARTHDATA_PASSWORD` (oppure `EARTHDATA_TOKEN`)
+nel `.env`, poi verifica:
+
+```bash
+python -m ingestion.earthdata_check              # login + ricerca di prova sull'Etna
+python -m ingestion.earthdata_check --download   # scarica anche un granulo (prova reale del login)
+```
+
+### Test
+
+```bash
+pip install -r requirements-dev.txt
+pytest                                           # test offline dei parser, senza rete né DB
+```
+
 ## Stato delle fonti
 
 | Fonte | Script | Stato | Copertura |
@@ -25,6 +48,7 @@ FIRMS_MAP_KEY gratuita: https://firms.modaps.eosdis.nasa.gov/api/map_key/
 | NASA FIRMS (hotspot) | `ingestion/ingest_hotspot.py` | ✅ Verificato — da confermare solo la direzione del parametro DATE al primo run (vedi commenti nel file) | MODIS dal 2000, VIIRS dal 2012-01-19 |
 | Eventi noti (GVP Smithsonian) | `ingestion/load_eventi_noti.py` + `data_seed/eventi_noti_template.csv` | ⚠️ Compilazione manuale del CSV richiesta | da definire in base al periodo scelto |
 | EtnaRCSC (INGV-OE) | `ingestion/ingest_etnarcsc.py` | 🔧 Da completare — meccanismo di export del form da verificare manualmente (istruzioni nel file) | dal 1999 |
+| NASA Earthdata (earthaccess) | `ingestion/earthdata_check.py` | 🔧 Solo autenticazione + ricerca di prova; dataset da scegliere (es. MOD11A1, SO₂ OMI/OMPS) | dipende dal prodotto |
 | Tremore vulcanico | *(non ancora presente)* | 📋 Prossimo step: pipeline ObsPy su FDSN dataselect | — |
 
 ## Esecuzione

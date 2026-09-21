@@ -16,23 +16,26 @@ from db.connection import get_connection
 
 INSERT_SQL = """
     INSERT INTO eventi_noti (event_date, event_type, description, source)
-    VALUES (%(event_date)s, %(event_type)s, %(description)s, %(source)s);
+    VALUES (%(event_date)s, %(event_type)s, %(description)s, %(source)s)
+    ON CONFLICT (event_date, event_type, source) DO NOTHING;
 """
 
 
 def run(csv_path: str) -> None:
     conn = get_connection()
     n = 0
+    total = 0
     try:
         with open(csv_path, newline="", encoding="utf-8") as f, conn.cursor() as cur:
             reader = csv.DictReader(f)
             for row in reader:
                 cur.execute(INSERT_SQL, row)
-                n += 1
+                n += cur.rowcount  # 0 se la riga esisteva già
+                total += 1
         conn.commit()
     finally:
         conn.close()
-    print(f"Caricati {n} eventi noti da {csv_path}")
+    print(f"Caricati {n} nuovi eventi noti su {total} righe del CSV ({csv_path})")
 
 
 if __name__ == "__main__":

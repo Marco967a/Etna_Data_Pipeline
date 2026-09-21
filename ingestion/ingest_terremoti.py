@@ -47,6 +47,37 @@ UPSERT_SQL = """
 """
 
 
+NUMERIC_COLUMNS = {"latitude", "longitude", "depth_km", "magnitude"}
+
+
+def _clean(column: str, value: str):
+    """Campo vuoto -> None; colonne numeriche -> float (una stringa vuota romperebbe l'insert)."""
+    value = value.strip()
+    if not value:
+        return None
+    return float(value) if column in NUMERIC_COLUMNS else value
+
+
+def parse_text(text: str) -> list[dict]:
+    """Parsa l'output "text" (pipe-separated) di fdsnws-event in una lista di dict."""
+    rows = []
+    for line in text.strip().splitlines():
+        if not line or line.startswith("#"):
+            continue
+        fields = line.split("|")
+        if len(fields) != len(COLUMNS):
+            # Riga inattesa: la salto ma non blocco l'intero import.
+            print(f"  [WARN] riga con {len(fields)} campi (attesi {len(COLUMNS)}), saltata")
+            continue
+        try:
+            row = {col: _clean(col, val) for col, val in zip(COLUMNS, fields)}
+        except ValueError:
+            print(f"  [WARN] valore numerico non valido, riga saltata: {line[:80]}")
+            continue
+        rows.append(row)
+    return rows
+
+
 def fetch_chunk(start: str, end: str) -> list[dict]:
     """Scarica e parsa un intervallo di terremoti (formato testo pipe-separated)."""
     params = {
@@ -60,19 +91,7 @@ def fetch_chunk(start: str, end: str) -> list[dict]:
     }
     resp = requests.get(BASE_URL, params=params, timeout=60)
     resp.raise_for_status()
-
-    rows = []
-    for line in resp.text.strip().splitlines():
-        if not line or line.startswith("#"):
-            continue
-        fields = line.split("|")
-        if len(fields) != len(COLUMNS):
-            # Riga inattesa: la salto ma non blocco l'intero import.
-            print(f"  [WARN] riga con {len(fields)} campi (attesi {len(COLUMNS)}), saltata")
-            continue
-        row = dict(zip(COLUMNS, fields))
-        rows.append(row)
-    return rows
+    return parse_text(resp.text)
 
 
 def upsert_rows(conn, rows: list[dict]) -> int:
@@ -91,7 +110,6 @@ def run(from_year: int, to_year: int, pause_seconds: float = 1.0) -> None:
     try:
         for year in range(from_year, to_year + 1):
             start = f"{year}-01-01T00:00:00"
-            end_year = min(year, date.today().year)
             end = (
                 f"{year}-12-31T23:59:59"
                 if year < date.today().year

@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS eventi_noti (
     description  TEXT,
     source       TEXT NOT NULL DEFAULT 'GVP_Smithsonian'
 );
+-- Rende idempotente load_eventi_noti (indice e non vincolo inline, così si applica anche a DB già creati).
+CREATE UNIQUE INDEX IF NOT EXISTS uq_eventi_noti ON eventi_noti (event_date, event_type, source);
 
 -- Placeholder per il tremore vulcanico (fase successiva: pipeline ObsPy su dataselect).
 CREATE TABLE IF NOT EXISTS tremore (

@@ -22,6 +22,7 @@ Esecuzione:
     python -m ingestion.ingest_hotspot --from-date 2012-01-19 --to-date 2012-01-31
 """
 import argparse
+import io
 import time
 from datetime import date, datetime, timedelta
 
@@ -53,13 +54,47 @@ UPSERT_SQL = """
 """
 
 
+DB_COLUMNS = [
+    "latitude", "longitude", "acq_date", "acq_time",
+    "satellite", "instrument", "confidence", "frp", "daynight",
+]
+
+
+def _mask_key(text: str) -> str:
+    """Nasconde la MAP_KEY: l'URL FIRMS la contiene e finirebbe nei messaggi d'errore."""
+    return text.replace(FIRMS_MAP_KEY, "***") if FIRMS_MAP_KEY else text
+
+
+def normalize_hotspot_df(csv_text: str, instrument: str) -> pd.DataFrame:
+    """Converte il CSV FIRMS in un DataFrame pronto per l'insert (vuoto se non ci sono righe)."""
+    if not csv_text.strip():
+        return pd.DataFrame(columns=DB_COLUMNS)
+    # acq_time va letto come stringa: "0035" come intero diventerebbe 35.
+    # confidence è numerica per MODIS e una lettera (l/n/h) per VIIRS.
+    df = pd.read_csv(io.StringIO(csv_text), dtype={"acq_time": str, "confidence": str})
+    missing = [c for c in DB_COLUMNS if c != "instrument" and c not in df.columns]
+    if missing:
+        # FIRMS risponde 200 con un testo d'errore (es. MAP_KEY non valida) invece di un CSV.
+        raise ValueError(f"risposta FIRMS inattesa, colonne mancanti {missing}: {csv_text[:100]!r}")
+    df["instrument"] = instrument
+    df["acq_time"] = df["acq_time"].str.zfill(4)
+    df = df[DB_COLUMNS]
+    # NaN -> None, altrimenti psycopg2 inserirebbe 'NaN' anche nelle colonne testuali.
+    return df.astype(object).where(df.notna(), None)
+
+
 def fetch_chunk(instrument: str, chunk_start: date) -> pd.DataFrame:
     source = SOURCES[instrument]
     url = f"{BASE_URL}/{FIRMS_MAP_KEY}/{source}/{FIRMS_AREA_STRING}/{DAY_RANGE}/{chunk_start.isoformat()}"
-    df = pd.read_csv(url)
-    if not df.empty:
-        df["instrument"] = instrument
-    return df
+    try:
+        resp = requests.get(url, timeout=60)
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        raise RuntimeError(_mask_key(str(exc))) from None
+    try:
+        return normalize_hotspot_df(resp.text, instrument)
+    except ValueError as exc:
+        raise ValueError(_mask_key(str(exc))) from None
 
 
 def upsert_rows(conn, df: pd.DataFrame) -> int:

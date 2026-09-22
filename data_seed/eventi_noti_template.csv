@@ -1,4 +1,15 @@
 event_date,event_type,description,source
 2001-07-17,eruzione_laterale,"Episodio parossistico, fontane di lava dal Levantino, prodromo dell'eruzione laterale luglio-agosto 2001",GVP_Smithsonian
+2002-10-27,eruzione_laterale,"Eruzione 'perfetta': fessure sui fianchi N e S, colonna di cenere visibile fino in Libia (~600 km); terminata il 29/01/2003",INGV_OE
+2004-09-07,eruzione_laterale,"Eruzione effusiva dalla parete ovest della Valle del Bove, senza attivita esplosiva sommitale; terminata l'8/03/2005",INGV_OE
+2006-07-14,eruzione_sommitale,"Prima fase eruttiva 2006: fessura sul fianco est del Cratere di Sud-Est, colata in Valle del Bove fino al 24/07",INGV_OE
+2006-09-04,eruzione_sommitale,"Seconda fase eruttiva 2006: attivita del Cratere di Sud-Est fino a meta dicembre, con crolli e piccoli flussi piroclastici il 16/11",INGV_OE
+2008-05-13,eruzione_laterale,"Inizio della piu lunga eruzione laterale dal 1991-93 (~417 giorni), fessure sul fianco sud-est; terminata nel luglio 2009",INGV_OE
+2011-01-12,eruzione_sommitale,"Inizio della lunga serie di parossismi (~50 episodi tra il 2011 e il 2013) dal neonato Nuovo Cratere di Sud-Est",INGV_OE
 2018-12-24,cambio_livello_allerta,"Inizio sciame sismico sin-eruttivo, intrusione a doppio dicco, terremoto Mw4.9 del 26/12",GVP_Smithsonian
-2025-12-29,eruzione_sommitale,"Attivita esplosiva al Cratere di Voragine e colate laviche in Valle del Bove",GVP_Smithsonian
+2021-02-16,eruzione_sommitale,"Inizio di una serie di almeno 17 parossismi dal Cratere di Sud-Est, proseguita fino al 31/03-01/04",INGV_OE
+2024-10-21,cambio_livello_allerta,"Codice colore voli innalzato da giallo ad arancione per emissioni di cenere dal Cratere di Sud-Est",INGV_OE
+2024-11-10,eruzione_sommitale,"Episodio di intensa attivita esplosiva nell'area Bocca Nuova-Voragine, colata lavica <400m verso SW",INGV_OE
+2025-06-02,eruzione_sommitale,"Crollo del fianco N del Cratere di Sud-Est, flusso piroclastico di ~3km in Valle del Bove (tra i piu estesi dal 1986), VONA rosso; evacuazione escursionisti, nessun ferito",INGV_OE
+2025-12-24,eruzione_laterale,"Ripresa del Cratere di Nord-Est/Voragine, colata verso Valle del Bove; dall'1/1/2026 nuova fessura a quota 2100m con attivita effusiva prolungata",INGV_OE
+2026-08-06,eruzione_sommitale,"Serie di episodi parossistici al Cratere Voragine (fontane di lava, colate verso Valle del Leone e Valle del Bove, piccoli flussi piroclastici), proseguita fino al 23/08",INGV_OE

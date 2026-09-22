@@ -49,7 +49,7 @@ pytest                                           # test offline dei parser, senz
 | Eventi noti (GVP Smithsonian) | `ingestion/load_eventi_noti.py` + `data_seed/eventi_noti_template.csv` | ⚠️ Compilazione manuale del CSV richiesta | da definire in base al periodo scelto |
 | EtnaRCSC (INGV-OE) | `ingestion/ingest_etnarcsc.py` | 🔧 Da completare — meccanismo di export del form da verificare manualmente (istruzioni nel file) | dal 1999 |
 | NASA Earthdata (earthaccess) | `ingestion/earthdata_check.py` | 🔧 Solo autenticazione + ricerca di prova; dataset da scegliere (es. MOD11A1, SO₂ OMI/OMPS) | dipende dal prodotto |
-| Tremore vulcanico | *(non ancora presente)* | 📋 Prossimo step: pipeline ObsPy su FDSN dataselect | — |
+| Tremore vulcanico | `ingestion/ingest_tremore.py` | ✅ Verificato, pronto all'uso — RMS grezzo per stazione, non confrontabile tra stazioni diverse (vedi commenti nel file) | dipende dalla copertura delle stazioni IV attive |
 
 ## Esecuzione
 
@@ -62,6 +62,9 @@ python -m ingestion.ingest_hotspot --from-date 2012-01-19 --to-date 2012-02-19
 
 # Eventi noti (dopo aver compilato il CSV)
 python -m ingestion.load_eventi_noti data_seed/eventi_noti_template.csv
+
+# Tremore vulcanico, un giorno di prova prima del backfill completo
+python -m ingestion.ingest_tremore --from-date 2024-06-01 --to-date 2024-06-01
 ```
 
 ## Note importanti
@@ -82,5 +85,4 @@ python -m ingestion.load_eventi_noti data_seed/eventi_noti_template.csv
 1. Completare `ingest_etnarcsc.py` (vedi istruzioni nel file).
 2. Compilare `eventi_noti_template.csv` con lo storico da
    https://volcano.si.edu/volcano.cfm?vn=211060 per il periodo di interesse.
-3. Costruire la pipeline tremore (dataselect + ObsPy, RMS banda 0.5-2.5 Hz).
-4. Passare alla fase di feature engineering (finestre pre-evento) ed EDA.
+3. Passare alla fase di feature engineering (finestre pre-evento) ed EDA.

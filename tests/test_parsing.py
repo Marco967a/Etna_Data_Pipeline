@@ -2,11 +2,16 @@
 Test offline dei parser: nessuna rete e nessun database.
 Esecuzione (dalla root del progetto): pytest
 """
+from datetime import date
+
+import numpy as np
 import pandas as pd
 import pytest
+from obspy import Stream, Trace
 
 from ingestion.ingest_hotspot import DB_COLUMNS, normalize_hotspot_df
 from ingestion.ingest_terremoti import COLUMNS, parse_text
+from ingestion.ingest_tremore import compute_rms_windows, parse_stations_text
 
 ISIDE_HEADER = "#EventID|Time|Latitude|Longitude|Depth/Km|Author|Catalog|Contributor|ContributorID|MagType|Magnitude|MagAuthor|EventLocationName|EventType"
 
@@ -102,3 +107,92 @@ def test_normalize_hotspot_csv_vuoto():
 def test_normalize_hotspot_errore_firms_con_status_200():
     with pytest.raises(ValueError, match="colonne mancanti"):
         normalize_hotspot_df("Invalid MAP_KEY.", "MODIS")
+
+
+def _synthetic_trace(seconds: float, amplitude: float = 1000.0, freq: float = 1.0,
+                      sampling_rate: float = 100.0, start="2024-01-01T00:00:00"):
+    """Traccia sinusoidale sintetica (entro la banda 0.5-2.5 Hz) per testare l'RMS."""
+    from obspy import UTCDateTime
+
+    npts = int(seconds * sampling_rate)
+    t = np.arange(npts) / sampling_rate
+    data = (amplitude * np.sin(2 * np.pi * freq * t)).astype("float64")
+    return Trace(data=data, header={"sampling_rate": sampling_rate, "starttime": UTCDateTime(start)})
+
+
+def test_compute_rms_windows_su_sinusoide_nota():
+    # 1300s di segnale a 1 Hz (dentro la banda 0.5-2.5) -> 2 finestre da 600s piene,
+    # la terza (1800s) supera la durata della traccia e va scartata.
+    stream = Stream([_synthetic_trace(seconds=1300)])
+
+    rows = compute_rms_windows(stream, "TEST", window_minutes=10)
+
+    assert len(rows) == 2
+    assert all(row["station"] == "TEST" for row in rows)
+    assert all(row["band_hz"] == "0.5-2.5" for row in rows)
+    assert all(row["window_start"].endswith("+00:00") for row in rows)
+    # RMS atteso di una sinusoide pura: ampiezza / sqrt(2)
+    for row in rows:
+        assert row["rms_value"] == pytest.approx(1000.0 / 2**0.5, rel=0.05)
+
+
+def test_compute_rms_windows_scarta_segmenti_piu_corti_della_finestra():
+    # Due segmenti separati da un buco, entrambi più corti della finestra (600s):
+    # nessuna finestra piena, quindi nessuna riga (niente RMS spurio a cavallo del buco).
+    from obspy import UTCDateTime
+
+    trace1 = _synthetic_trace(seconds=300, start="2024-01-01T00:00:00")
+    trace2 = _synthetic_trace(seconds=300, start="2024-01-01T00:06:40")  # buco di 100s
+    stream = Stream([trace1, trace2])
+
+    assert compute_rms_windows(stream, "TEST", window_minutes=10) == []
+
+
+def test_compute_rms_windows_stream_vuoto():
+    assert compute_rms_windows(None, "TEST", window_minutes=10) == []
+    assert compute_rms_windows(Stream(), "TEST", window_minutes=10) == []
+
+
+STATION_HEADER = (
+    "#Network|Station|location|Channel|Latitude|Longitude|Elevation|Depth|"
+    "Azimuth|Dip|SensorDescription|Scale|ScaleFreq|ScaleUnits|SampleRate|StartTime|EndTime"
+)
+
+
+def test_parse_stations_text_stazione_attiva_senza_fine():
+    text = "\n".join([
+        STATION_HEADER,
+        "IV|ECPN||HHZ|37.74|14.98|3038|0|0|-90|SENSOR|1|1|m/s|100|2020-06-16T12:32:09|",
+    ])
+
+    stations = parse_stations_text(text)
+
+    assert stations == {"ECPN": {"channel": "HHZ", "start": date(2020, 6, 16), "end": None}}
+
+
+def test_parse_stations_text_unisce_epoche_dello_stesso_canale():
+    text = "\n".join([
+        "IV|ECPN||HHZ|37.74|14.98|3038|0|0|-90|SENSOR|1|1|m/s|100|2020-06-16T12:32:09|2022-01-01T00:00:00",
+        "IV|ECPN||HHZ|37.74|14.98|3038|0|0|-90|SENSOR2|1|1|m/s|100|2022-01-02T00:00:00|",
+    ])
+
+    stations = parse_stations_text(text)
+
+    assert stations["ECPN"] == {"channel": "HHZ", "start": date(2020, 6, 16), "end": None}
+
+
+def test_parse_stations_text_preferisce_hhz_a_ehz():
+    text = "\n".join([
+        "IV|ECPN||EHZ|37.74|14.98|3038|0|0|-90|OLD|1|1|m/s|50|2010-01-01T00:00:00|2020-01-01T00:00:00",
+        "IV|ECPN||HHZ|37.74|14.98|3038|0|0|-90|NEW|1|1|m/s|100|2020-01-02T00:00:00|",
+    ])
+
+    stations = parse_stations_text(text)
+
+    assert stations["ECPN"]["channel"] == "HHZ"
+    assert stations["ECPN"]["start"] == date(2020, 1, 2)
+
+
+def test_parse_stations_text_righe_malformate_e_vuoto():
+    assert parse_stations_text("") == {}
+    assert parse_stations_text("IV|ECPN|solo|tre|campi") == {}

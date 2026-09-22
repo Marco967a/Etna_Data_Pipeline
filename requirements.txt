@@ -3,3 +3,4 @@ pandas>=2.0
 psycopg2-binary>=2.9
 python-dotenv>=1.0
 earthaccess>=0.9
+obspy>=1.4

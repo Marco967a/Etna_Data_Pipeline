@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 from obspy import Stream, Trace
 
+from ingestion.ingest_etnarcsc import parse_html
 from ingestion.ingest_hotspot import DB_COLUMNS, normalize_hotspot_df
 from ingestion.ingest_terremoti import COLUMNS, parse_text
 from ingestion.ingest_tremore import compute_rms_windows, parse_stations_text
@@ -196,3 +197,61 @@ def test_parse_stations_text_preferisce_hhz_a_ehz():
 def test_parse_stations_text_righe_malformate_e_vuoto():
     assert parse_stations_text("") == {}
     assert parse_stations_text("IV|ECPN|solo|tre|campi") == {}
+
+
+def _etnarcsc_row(event_id: str, cells: list[str]) -> str:
+    tds = "".join(f"<td>{c} </td>" for c in cells)
+    tds += "<td><input class='viewOnMapButton' type='button' value='View on map'></td>"
+    return f"<tr class='unselected' id='{event_id}' onclick=\"\">{tds}</tr>"
+
+
+def test_parse_html_riga_valida():
+    text = "<table id='showtable'><tbody>" + _etnarcsc_row(
+        "faf5ced5-f041-11eb-ae93-00155da00001",
+        ["2020-01-10 23:09:07", "3.5", "ML", "1.2", "37.749", "15.026",
+         "1.7 km NW from Monte Centenari (CT)"],
+    ) + "</tbody></table>"
+
+    rows = parse_html(text)
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row["event_id"] == "faf5ced5-f041-11eb-ae93-00155da00001"
+    assert row["event_time"] == "2020-01-10 23:09:07+00:00"
+    assert row["magnitude"] == 3.5
+    assert row["mag_type"] == "ML"
+    assert row["depth_km"] == 1.2
+    assert row["latitude"] == 37.749
+    assert row["longitude"] == 15.026
+    assert row["region"] == "1.7 km NW from Monte Centenari (CT)"
+
+
+def test_parse_html_decodifica_entita_html_nella_regione():
+    text = "<table><tbody>" + _etnarcsc_row(
+        "54776e20-f041-11eb-ae93-00155da00001",
+        ["2020-01-10 23:08:39", "4.6", "ML", "1.3", "37.752", "15.027", "Scarf&egrave; (CT)"],
+    ) + "</tbody></table>"
+
+    rows = parse_html(text)
+
+    assert rows[0]["region"] == "Scarfè (CT)"
+
+
+def test_parse_html_riga_malformata_saltata(capsys):
+    text = (
+        "<table><tbody>"
+        + "<tr class='unselected' id='deadbeef-0000-0000-0000-000000000001' onclick=\"\">"
+        + "<td>solo una cella</td></tr>"
+        + _etnarcsc_row("deadbeef-0000-0000-0000-000000000002",
+                        ["2020-01-01 00:00:00", "1.0", "ML", "0.5", "37.7", "15.0", "Etna"])
+        + "</tbody></table>"
+    )
+
+    rows = parse_html(text)
+
+    assert [r["event_id"] for r in rows] == ["deadbeef-0000-0000-0000-000000000002"]
+    assert "[WARN]" in capsys.readouterr().out
+
+
+def test_parse_html_nessun_risultato():
+    assert parse_html("<table id='showtable'><thead></thead><tbody></tbody></table>") == []

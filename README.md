@@ -68,6 +68,12 @@ python -m ingestion.ingest_tremore --from-date 2024-06-01 --to-date 2024-06-01
 
 # Terremoti EtnaRCSC, dal 1999 a oggi (~1 richiesta per anno)
 python -m ingestion.ingest_etnarcsc --from-year 1999
+
+# Eventi 2021-2026 (episodi parossistici/eruttivi, arricchimento)
+python -m ingestion.load_eventi_noti data_seed/eventi_noti_2021_2026.csv
+
+# Dataset giornaliero "eruzione nelle prossime 24h" (-> data_out/dataset_24h.csv)
+python -m features.build_dataset
 ```
 
 ## Note importanti
@@ -85,4 +91,7 @@ python -m ingestion.ingest_etnarcsc --from-year 1999
 
 ## Prossimi step
 
-1. Passare alla fase di feature engineering (finestre pre-evento) ed EDA.
+1. EDA e primo modello sul dataset 24h (`features/build_dataset.py`). Attenzione: ~80% dei
+   positivi cade nel 2021 e il catalogo EtnaRCSC scaricato arriva solo a fine feb 2026 —
+   serve una validazione temporale (non casuale) e cautela sui confondenti per anno.
+2. Tremore: non ancora backfillato (costoso); se serve, limitare a 1-2 stazioni fisse.

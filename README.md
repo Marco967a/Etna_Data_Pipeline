@@ -72,6 +72,9 @@ python -m ingestion.ingest_etnarcsc --from-year 1999
 # Eventi 2021-2026 (episodi parossistici/eruttivi, arricchimento)
 python -m ingestion.load_eventi_noti data_seed/eventi_noti_2021_2026.csv
 
+# Analisi esplorativa pre-eruttiva (test di permutazione + modelli a blocchi -> reports/)
+python -m analysis.eda_preeruptive
+
 # Dataset giornaliero "eruzione nelle prossime 24h" (-> data_out/dataset_24h.csv)
 python -m features.build_dataset
 ```
@@ -91,7 +94,8 @@ python -m features.build_dataset
 
 ## Prossimi step
 
-1. EDA e primo modello sul dataset 24h (`features/build_dataset.py`). Attenzione: ~80% dei
+1. Primi risultati in `reports/REPORT.md`: nessun precursore a breve termine robusto dai soli
+   terremoti. Da esplorare feature non legate al tasso, tremore, hotspot. Nota: ~80% dei
    positivi cade nel 2021 e il catalogo EtnaRCSC scaricato arriva solo a fine feb 2026 —
    serve una validazione temporale (non casuale) e cautela sui confondenti per anno.
 2. Tremore: non ancora backfillato (costoso); se serve, limitare a 1-2 stazioni fisse.

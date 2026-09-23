@@ -48,3 +48,17 @@ def test_label_days_positivi_e_esclusione_negativi_vicini():
     assert lab.loc["2024-01-09", "label"] == 1
     assert lab.loc["2024-01-08", "label"] == 0 and not lab.loc["2024-01-08", "keep"]
     assert lab.loc["2024-06-01", "keep"]
+
+
+def test_holm_monotono_e_limitato_a_uno():
+    from analysis.eda_preeruptive import holm
+    adj = holm(np.array([0.01, 0.04, 0.03]))
+    assert adj[0] == pytest.approx(0.03) and adj.max() <= 1.0
+    assert adj[1] >= adj[2] >= adj[0]
+
+
+def test_phase_onsets_raggruppa_serie_vicine():
+    from analysis.eda_preeruptive import phase_onsets
+    er = pd.DatetimeIndex(["2021-01-01", "2021-01-10", "2021-03-15", "2021-03-20"])
+    on = phase_onsets(er, "2021-01-01", pd.Timestamp("2021-12-31"))
+    assert list(on) == [pd.Timestamp("2021-01-01"), pd.Timestamp("2021-03-15")]

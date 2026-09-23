@@ -62,3 +62,23 @@ def test_phase_onsets_raggruppa_serie_vicine():
     er = pd.DatetimeIndex(["2021-01-01", "2021-01-10", "2021-03-15", "2021-03-20"])
     on = phase_onsets(er, "2021-01-01", pd.Timestamp("2021-12-31"))
     assert list(on) == [pd.Timestamp("2021-01-01"), pd.Timestamp("2021-03-15")]
+
+
+def _eq_full(n=40, depth=5.0):
+    times = pd.date_range("2024-01-01", periods=n, freq="6h", tz="UTC")
+    return pd.DataFrame({"event_time": times, "magnitude": np.linspace(1.0, 2.0, n),
+                         "latitude": 37.751, "longitude": 14.994, "depth_km": depth})
+
+
+def test_nonrate_profondita_mediana_e_distanza_sommitale():
+    from features.nonrate import build_nonrate_features
+    f = build_nonrate_features(_eq_full(), pd.DatetimeIndex(["2024-01-10"]))
+    assert f.loc["2024-01-10", "depth_med_7d"] == pytest.approx(5.0)
+    assert f.loc["2024-01-10", "dist_summit_med_7d"] == pytest.approx(0.0, abs=1e-6)
+    assert f.loc["2024-01-10", "frac_deep_7d"] == 0.0
+
+
+def test_nonrate_sotto_soglia_eventi_da_nan():
+    from features.nonrate import build_nonrate_features
+    f = build_nonrate_features(_eq_full(n=3), pd.DatetimeIndex(["2024-01-02"]))
+    assert np.isnan(f.loc["2024-01-02", "depth_med_7d"])

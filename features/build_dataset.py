@@ -50,7 +50,7 @@ def b_value_aki(mags: np.ndarray, mc: float) -> float:
 
 def load_earthquakes(conn, source: str = "EtnaRCSC") -> pd.DataFrame:
     df = pd.read_sql(
-        "SELECT event_time, magnitude FROM terremoti "
+        "SELECT event_time, magnitude, latitude, longitude, depth_km FROM terremoti "
         "WHERE source = %(s)s AND magnitude IS NOT NULL ORDER BY event_time",
         conn, params={"s": source},
     )

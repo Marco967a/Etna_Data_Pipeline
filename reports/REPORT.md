@@ -49,3 +49,24 @@ elenco degli onset nell'output dello script) e 67 giorni eruttivi totali.
 - Da provare: feature che non dipendono dal tasso (profondità, migrazione spaziale, rapporto
   eventi profondi/superficiali, b-value con Mc locale), tremore su 1-2 stazioni, hotspot FIRMS
   (rilevano l'attività effusiva, non i parossismi brevi).
+
+## 5. Feature non legate al tasso (`python -m analysis.eda_nonrate`)
+
+Feature: profondità (mediana, IQR, quota > 10 km), distanza e dispersione rispetto ai crateri
+sommitali, magnitudo media/dev. std, coefficiente di variazione dei tempi tra eventi, migrazione
+(centroide e profondità ultimi 7 gg vs giorni 8-37), b-value con Mc locale. Test sul giorno prima
+dell'onset, in versione grezza e detrendata (meno la mediana mobile annuale): 54 test.
+
+- **Nessun test significativo dopo Holm** (miglior p_Holm = 0.36).
+- Segnali nominali (p grezzo < 0.05, ipotesi da rivalutare, non risultati): profondità mediana a 7 gg
+  più bassa (-1.2 km detrendata), spostamento verso eventi più superficiali (-2 km rispetto al mese
+  precedente) e magnitudo media più bassa (più piccoli eventi). Direzione coerente tra versione
+  grezza e detrendata. Controllo di coerenza sui singoli onset: profondità 7 gg sotto la norma in
+  10 onset su 13 (sign test p = 0.09), spostamento in 9 su 13 (p = 0.27).
+- **Modelli:** le sole feature non legate al tasso non superano il caso (AUC 0.43-0.57, in un caso
+  0.18 cioè instabile tra blocchi: nessun segnale che generalizza). Combinarle con le feature di tasso
+  non migliora rispetto al solo tasso (guadagno sul null 0.015-0.057, in linea con la sezione 2).
+
+**Lettura:** la debole tendenza a sismicità più superficiale prima degli onset è fisicamente
+plausibile ma, con 14 fasi e 54 test, non è distinguibile dal caso. Per confermarla servirebbero
+più onset (altri anni, altri cataloghi) o un test mirato su una sola ipotesi decisa a priori.

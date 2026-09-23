@@ -74,6 +74,7 @@ python -m ingestion.load_eventi_noti data_seed/eventi_noti_2021_2026.csv
 
 # Analisi esplorativa pre-eruttiva (test di permutazione + modelli a blocchi -> reports/)
 python -m analysis.eda_preeruptive
+python -m analysis.eda_nonrate                  # feature non legate al tasso
 
 # Dataset giornaliero "eruzione nelle prossime 24h" (-> data_out/dataset_24h.csv)
 python -m features.build_dataset

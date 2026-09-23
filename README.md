@@ -51,6 +51,13 @@ pytest                                           # test offline dei parser, senz
 | NASA Earthdata (earthaccess) | `ingestion/earthdata_check.py` | 🔧 Solo autenticazione + ricerca di prova; dataset da scegliere (es. MOD11A1, SO₂ OMI/OMPS) | dipende dal prodotto |
 | Tremore vulcanico | `ingestion/ingest_tremore.py` | ✅ Verificato, pronto all'uso — RMS grezzo per stazione, non confrontabile tra stazioni diverse (vedi commenti nel file) | dipende dalla copertura delle stazioni IV attive |
 
+## Notebook Colab
+
+[![Apri in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Marco967a/Etna_Data_Pipeline/blob/main/notebooks/etna_preeruptive_colab.ipynb)
+
+`notebooks/etna_preeruptive_colab.ipynb`: due metriche (profondità mediana a 7 gg e b-value a 90 gg)
+con test di permutazione. Autonomo: scarica i dati da `data_seed/` del repository, senza DB.
+
 ## Esecuzione
 
 ```bash

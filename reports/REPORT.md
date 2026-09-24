@@ -70,3 +70,25 @@ dell'onset, in versione grezza e detrendata (meno la mediana mobile annuale): 54
 **Lettura:** la debole tendenza a sismicità più superficiale prima degli onset è fisicamente
 plausibile ma, con 14 fasi e 54 test, non è distinguibile dal caso. Per confermarla servirebbero
 più onset (altri anni, altri cataloghi) o un test mirato su una sola ipotesi decisa a priori.
+
+## 6. Aggiornamento: catalogo esteso al 14/09/2026 (EtnaRSC)
+
+EtnaRCSC si fermava al 28/02/2026; EtnaRSC (INGV-OE, dal 2020) è lo stesso catalogo, aggiornato (nel
+periodo in comune 7.844 eventi su 7.844 coincidono per origine, magnitudo e profondità). Aggiunti 652
+eventi localizzati dal 1/3 al 14/9/2026 (ultima settimana esclusa, ancora in revisione) e il nuovo inizio
+di fase del 22/06/2026: 15 fasi invece di 14. Le analisi sono state rieseguite senza cambiare metodo.
+
+- **Profondità mediana a 7 giorni**: il segnale del §5 non regge. Sui 14 inizi di fase valutabili
+  5,8 km contro 6,4 dei controlli (p = 0.45; prima 4,3 vs 6,5, p ≈ 0.02). Il nuovo inizio è un test
+  fuori campione (l'ipotesi nasceva dai dati precedenti) e va in direzione opposta: la settimana prima
+  del 22/06/2026 la profondità mediana è ~19 km sopra la norma per ~15 eventi profondi (~25 km) del 17/06.
+- **Conteggio eventi**: grezzo 108 contro 76 (p ≈ 0.015), ma p ≈ 0.28 dopo aver tolto livello e scala.
+- **Test con feature non legate al tasso**: ancora nessun test significativo dopo Holm (54 test).
+- **Modelli**: senza guadagno sul null per le feature di tasso (AUC 0.77 contro null 0.78 al 24h);
+  guadagni piccoli (+0.03/0.05) con feature non legate al tasso ma AUC assolute non utili (0.54-0.76,
+  in parte sotto 0.5 in alcune configurazioni: instabilità tra blocchi).
+- Nota sui controlli: marzo 2026 include una sequenza tettonica con M 4,5 (4/3, area Ragalna, ~130
+  eventi in un giorno) che entra nei giorni di controllo e alza i conteggi di riferimento.
+
+**Conclusione aggiornata:** con 15 fasi indipendenti, nessuna delle metriche prese in esame è distinguibile
+dal caso; l'ipotesi "sismicità più superficiale prima dell'eruzione" non è confermata su dati nuovi.

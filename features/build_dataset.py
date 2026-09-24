@@ -48,11 +48,12 @@ def b_value_aki(mags: np.ndarray, mc: float) -> float:
     return np.log10(np.e) / denom if denom > 0 else np.nan
 
 
-def load_earthquakes(conn, source: str = "EtnaRCSC") -> pd.DataFrame:
+def load_earthquakes(conn, sources: tuple = ("EtnaRCSC", "EtnaRSC")) -> pd.DataFrame:
+    """EtnaRCSC (fino a feb 2026) e EtnaRSC (dopo) sono lo stesso catalogo: periodi disgiunti."""
     df = pd.read_sql(
         "SELECT event_time, magnitude, latitude, longitude, depth_km FROM terremoti "
-        "WHERE source = %(s)s AND magnitude IS NOT NULL ORDER BY event_time",
-        conn, params={"s": source},
+        "WHERE source = ANY(%(s)s) AND magnitude IS NOT NULL ORDER BY event_time",
+        conn, params={"s": list(sources)},
     )
     df["event_time"] = pd.to_datetime(df["event_time"], utc=True)
     return df

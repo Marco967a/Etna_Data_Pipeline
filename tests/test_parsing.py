@@ -10,6 +10,7 @@ import pytest
 from obspy import Stream, Trace
 
 from ingestion.ingest_etnarcsc import parse_html
+from ingestion.ingest_etnarsc import parse_csv
 from ingestion.ingest_hotspot import DB_COLUMNS, normalize_hotspot_df
 from ingestion.ingest_terremoti import COLUMNS, parse_text
 from ingestion.ingest_tremore import compute_rms_windows, parse_stations_text
@@ -255,3 +256,28 @@ def test_parse_html_riga_malformata_saltata(capsys):
 
 def test_parse_html_nessun_risultato():
     assert parse_html("<table id='showtable'><thead></thead><tbody></tbody></table>") == []
+
+
+ETNARSC_CSV = "\n".join([
+    "Origin Time;Ml;Zone;Depth;Latitude;Longitude;Nl;Gap;RMS;seh;sez;Note;Processing",
+    "2026/09/21 19:55:31;1.1;1.2 km E from Ragalna (CT);3.79;37.6345;14.9565;10;92;0.15;0.4;1.4;;22/09/2026 09:17:19",
+    "2026/09/17 18:27:29;;Imp. Loc. (ESCV.EPZF.EMCO);;;;3;;;;;;18/09/2026 08:47:48",
+    "2025/12/13 18:45:19;1.5;0.3 km W from M. Frumento Supino (CT);12.26;37.7335;14.9926;15;67;0.22;0.5;0.8;Stazioni a peso 4; EPIT esclusa dal calcolo di",
+    "ML per problemi ad HHN.;15/12/2025 12:09:03",
+    "2025/12/13 14:42:44;1.5;1.6 km SE from Ragalna (CT);10.96;37.6234;14.9552;9;104;0.2;0.9;1.1;;15/12/2025 11:46:25",
+])
+
+
+def test_parse_csv_etnarsc_scarta_non_localizzati_e_unisce_note_multiriga():
+    rows = parse_csv(ETNARSC_CSV)
+
+    assert [r["event_id"] for r in rows] == [
+        "etnarsc_2026-09-21T19:55:31_37.6345_14.9565", "etnarsc_2025-12-13T18:45:19_37.7335_14.9926",
+        "etnarsc_2025-12-13T14:42:44_37.6234_14.9552"]
+    assert rows[0]["magnitude"] == 1.1 and rows[0]["depth_km"] == 3.79
+    assert rows[0]["event_time"] == "2026-09-21 19:55:31+00:00"
+    assert rows[1]["region"] == "0.3 km W from M. Frumento Supino (CT)"
+
+
+def test_parse_csv_etnarsc_vuoto():
+    assert parse_csv("Origin Time;Ml;Zone;Depth;Latitude;Longitude") == []
